@@ -61,7 +61,7 @@ void pin_callback(uint gpio, uint32_t events) {
     if (gpio == ECHO_PIN) {
         if (gpio_get(ECHO_PIN)) {
             // ECHO_PIN mudou para alto
-            uint32_t start_time = to_us_since_boot(get_absolute_time());
+            start_time = to_us_since_boot(get_absolute_time());
         } else {
             // ECHO_PIN mudou para baixo
             end_time = to_us_since_boot(get_absolute_time());
