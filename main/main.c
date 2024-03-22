@@ -25,9 +25,6 @@ QueueHandle_t xQueueDistance;
 SemaphoreHandle_t xSemaphoreTrigger;
 
 
-volatile uint32_t start_time = 0;
-volatile uint32_t end_time = 0;
-
 void oled1_btn_led_init(void) {
     gpio_init(LED_1_OLED);
     gpio_set_dir(LED_1_OLED, GPIO_OUT);
@@ -58,6 +55,9 @@ void send_pulse() {
 }
 
 void pin_callback(uint gpio, uint32_t events) {
+    static uint32_t start_time = 0;
+    static uint32_t end_time = 0;
+
     if (gpio == ECHO_PIN) {
         if (gpio_get(ECHO_PIN)) {
             // ECHO_PIN mudou para alto
