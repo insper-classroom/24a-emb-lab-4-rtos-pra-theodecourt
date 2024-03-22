@@ -55,20 +55,18 @@ void send_pulse() {
 }
 
 void pin_callback(uint gpio, uint32_t events) {
-    static uint32_t start_time, end_time,duration;
-
-    if (gpio == ECHO_PIN) {
-        if (gpio_get(ECHO_PIN)) {
-            // ECHO_PIN mudou para alto
-            start_time = to_us_since_boot(get_absolute_time());
-        } else {
-            // ECHO_PIN mudou para baixo
-            end_time = to_us_since_boot(get_absolute_time());
-            duration = end_time - start_time;
-
-            xQueueSendFromISR(xQueueTime, &duration, 0);
+    static uint32_t echo_rise_time, echo_fall_time, dt;
+    if(events == 0x8) {  // rise edge
+        if (gpio == ECHO_PIN) {
+            echo_rise_time = to_us_since_boot(get_absolute_time());
         }
-    }
+    } else if (events == 0x4) { // fall edge
+        if (gpio == ECHO_PIN) {
+            echo_fall_time = to_us_since_boot(get_absolute_time());
+            dt = echo_fall_time-echo_rise_time;
+            xQueueSendFromISR(xQueueTime, &dt, 0);
+        }
+    } 
 }
 
 void trigger_task(void *p) {
