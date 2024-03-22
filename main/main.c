@@ -90,6 +90,7 @@ void trigger_task(void *p) {
     while (1) {
         send_pulse();
         xSemaphoreGive(xSemaphoreTrigger);
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
@@ -131,20 +132,51 @@ void oled_task(void *p) {
 
     float distance;
     char distance_str[20];
+    int bar_length;
+    const char *error_msg = "Erro: Sem leitura";
+    TickType_t last_reading_time = 0;
+    TickType_t current_time;
+    const TickType_t max_time_without_reading = pdMS_TO_TICKS(500); // 500 ms
 
     while (1) {
-        if (xSemaphoreTake(xSemaphoreTrigger, pdMS_TO_TICKS(100)) == pdTRUE) {
+        if (xSemaphoreTake(xSemaphoreTrigger, pdMS_TO_TICKS(50)) == pdTRUE) {
+            current_time = xTaskGetTickCount();
             if (xQueueReceive(xQueueDistance, &distance, pdMS_TO_TICKS(50))) {
+                last_reading_time = current_time;
+                if (distance > 200.0) {
+                    gfx_clear_buffer(&disp);
+                    // Exibe a mensagem de erro se a distância for maior que 200 cm
+                    gfx_draw_string(&disp, 0, 0, 1, "Erro: Distancia > 200");
+                    gfx_show(&disp);
+                    vTaskDelay(pdMS_TO_TICKS(150)); 
+                } else {
+                    gfx_clear_buffer(&disp);
+                    snprintf(distance_str, sizeof(distance_str), "%.2f", distance);
+                    gfx_draw_string(&disp, 0, 0, 1, distance_str);
+                    bar_length = (int)(distance * 128.0 / 200.0);
+                    if (bar_length > 128) {
+                        bar_length = 128;
+                    }
+
+                    // Desenha a barra
+                    gfx_draw_line(&disp, 15, 27, bar_length + 15, 27);
+                    gfx_show(&disp);
+                    vTaskDelay(pdMS_TO_TICKS(50));
+                    }
+            } else if (current_time - last_reading_time > max_time_without_reading) {
+                // Exibe a mensagem de erro se não houver leitura recente
                 gfx_clear_buffer(&disp);
-                snprintf(distance_str, sizeof(distance_str), "%.2f", distance);
-                gfx_draw_string(&disp, 0, 0, 1, distance_str);
+                gfx_draw_string(&disp, 0, 0, 1, error_msg);
                 gfx_show(&disp);
-                vTaskDelay(pdMS_TO_TICKS(50));
             }
+        } else {
+            gfx_clear_buffer(&disp);
+            gfx_draw_string(&disp, 0, 0, 1, error_msg);
+            gfx_show(&disp);
+            vTaskDelay(pdMS_TO_TICKS(150));
         }
     }
 }
-
 
 int main() {
     stdio_init_all();
