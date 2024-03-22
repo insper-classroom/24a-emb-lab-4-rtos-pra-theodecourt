@@ -54,10 +54,9 @@ void send_pulse() {
     gpio_put(TRIG_PIN, 0);
 }
 
-volatile uint32_t start_time;
-volatile uint32_t end_time ;
-
 void pin_callback(uint gpio, uint32_t events) {
+    static uint32_t start_time, end_time,duration;
+
     if (gpio == ECHO_PIN) {
         if (gpio_get(ECHO_PIN)) {
             // ECHO_PIN mudou para alto
@@ -65,7 +64,7 @@ void pin_callback(uint gpio, uint32_t events) {
         } else {
             // ECHO_PIN mudou para baixo
             end_time = to_us_since_boot(get_absolute_time());
-            uint32_t duration = end_time - start_time;
+            duration = end_time - start_time;
 
             xQueueSendFromISR(xQueueTime, &duration, 0);
         }
