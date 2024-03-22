@@ -54,10 +54,10 @@ void send_pulse() {
     gpio_put(TRIG_PIN, 0);
 }
 
-void pin_callback(uint gpio, uint32_t events) {
-    static uint32_t start_time;
-    static uint32_t end_time ;
+volatile uint32_t start_time;
+volatile uint32_t end_time ;
 
+void pin_callback(uint gpio, uint32_t events) {
     if (gpio == ECHO_PIN) {
         if (gpio_get(ECHO_PIN)) {
             // ECHO_PIN mudou para alto
