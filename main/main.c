@@ -55,8 +55,8 @@ void send_pulse() {
 }
 
 void pin_callback(uint gpio, uint32_t events) {
-    static uint32_t start_time = 0;
-    static uint32_t end_time = 0;
+    static uint32_t start_time;
+    static uint32_t end_time ;
 
     if (gpio == ECHO_PIN) {
         if (gpio_get(ECHO_PIN)) {
